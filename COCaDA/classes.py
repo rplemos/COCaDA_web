@@ -5,6 +5,25 @@ Date: 12/08/2024
 License: MIT License
 """
 
+class ProcessingContext:
+    """
+    Stores processing parameters passed by command-line.
+
+    Attributes:
+        core (str or None): The core selection for processing. Defaults to None.
+        output (str or None): The output file path or identifier. Defaults to None.
+        region (bool): Whether to process region-specific data. Defaults to False.
+        interface (bool): Whether to process interface-related data. Defaults to False.
+    """
+
+    def __init__(self, core=None, output=None, region=False, interface=False, custom_distances=False, epsilon=0):
+        self.core = core
+        self.output = output
+        self.region = region
+        self.interface = interface
+        self.custom_distances = custom_distances
+        self.epsilon = epsilon
+
 class Protein:
     """
     Represents a protein structure, including its title, ID, and chains.
@@ -127,9 +146,10 @@ class Atom:
         z (float): The z-coordinate of the atom.
         occupancy (float): The occupancy value of the atom.
         residue (Residue): The residue to which the atom belongs.
+        entity (int): The entity in which the atom is located.
     """
     
-    def __init__(self, atomname, x, y, z, occupancy, residue):
+    def __init__(self, atomname, x, y, z, occupancy, residue, entity):
         """
         Initializes a new Atom instance.
         """
@@ -140,6 +160,7 @@ class Atom:
         self.z = z
         self.occupancy = occupancy
         self.residue = residue
+        self.entity = entity
 
 
 class Contact: 
