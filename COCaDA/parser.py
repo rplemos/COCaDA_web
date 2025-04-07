@@ -83,8 +83,9 @@ def parse_pdb(pdb_file):
                 #     continue
                 resname = line[17:20]
                 
-                if resname == "HIE" or resname == "HID":  # alternative names for protonated histidines
-                    resname = "HIS" 
+                # alternative names for protonated histidines
+                if resname in ["HID", "HIE", "HSP", "HSD", "HSE"]: 
+                    resname = "HIS"
                 
                 if resname not in residue_mapping:
                     continue
@@ -257,7 +258,8 @@ def parse_cif(cif_file):
                 #     continue
                 resname = line[resname_index]
 
-                if resname in ["HID", "HIE", "HSP", "HSD", "HSE"]: # alternative names for protonated histidines
+                # alternative names for protonated histidines
+                if resname in ["HID", "HIE", "HSP", "HSD", "HSE"]: 
                     resname = "HIS" 
 
                 if resname not in residue_mapping:
@@ -321,7 +323,7 @@ def parse_cif(cif_file):
                 atominfo_block = False 
     
     if title is not None:
-        current_protein.set_title(title.title().replace("'",""))
+        current_protein.set_title(title.title().replace("'","").replace('"','').replace(",","."))
     else:
         current_protein.set_title(None)
     return current_protein

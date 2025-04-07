@@ -10,6 +10,7 @@ from argparse import ArgumentParser, ArgumentError, ArgumentTypeError
 from multiprocessing import cpu_count
 import re
 
+
 def cl_parse():
     """
     Parses command-line arguments for a PDB/mmCIF parser and contact detection tool.
@@ -30,17 +31,17 @@ def cl_parse():
     try:
         parser = ArgumentParser(description='COCαDA - Large-Scale Protein Interatomic Contact Cutoff Optimization by Cα Distance Matrices.')
         parser.add_argument('-f', '--files', nargs='+', required=True, type=validate_file, help='List of files in pdb/cif format (at least one required). Wildcards are accepted (ex. -f *.cif).')
+        parser.add_argument('-m', '--multicore', required=False, nargs='?', const=0, help='Use MultiCore mode. Default uses all available cores, and selections can be defined based on the following: -m X = specific single core. -m X-Y = range of cores from X to Y. -m X,Y,Z... = specific multiple cores.')
         parser.add_argument('-o', '--output', required=False, nargs='?', const='./outputs', help='Outputs the results to files in the given folder. Default is ./outputs.')
         parser.add_argument('-r', '--region', required=False, nargs='?', help='Define only a region of residues to be analyzed. Selections can be defined based on the following: -r X-Y = range of residues from X to Y. -r X,Y,Z... = specific multiple residues.')
         parser.add_argument('-i', '--interface', required=False, action='store_true', help='Calculate only interface contacts.')
-        parser.add_argument('-d', '--distances', required=False, action='store_true', help='Processes custom contact distances based on the "contact_distances.txt" file.')
+        parser.add_argument('-d', '--distances', required=False, help='Processes custom contact distances defined by the user. Input is 14 positive float values separated by commas (min-max values for each of the 7 contact types).')
 
         args = parser.parse_args()
 
         files = args.files
         output = args.output
         interface = args.interface
-        distances = args.distances
                 
         ncores = cpu_count()
         multi = args.multicore
@@ -57,7 +58,13 @@ def cl_parse():
             region = validate_region(region_values)
         else:
             region = None
-        
+            
+        custom_distances = args.distances
+        if custom_distances is not None:
+            distances = validate_distances(custom_distances)
+        else:
+            distances = None
+            
     except ArgumentError as e:
         print(f"Argument Error: {str(e)}")
         exit(1)
@@ -168,3 +175,40 @@ def validate_region(region):
         return res_list
     
     raise ArgumentTypeError(f"Invalid region format: {region}. Use a range (x-y) or a list (x,y,z).")
+
+
+def validate_distances(distances):
+    """
+    Validates that the custom_distances string contains exactly 14 positive float numbers separated by commas.
+    Groups the numbers into specific pairs and keys in a dictionary.
+    Ensures that for each pair (min, max), the second value is strictly greater than the first.
+    Raises ArgumentTypeError if the format is incorrect or any validation fails.
+
+    Args:
+        value (str): The custom_distances string to validate.
+
+    Returns:
+        dict[str, list[float]]: The conditions dictionary for contact detection.
+    """
+    
+    keys = [
+        "salt_bridge", "hydrophobic", "hydrogen_bond", "repulsive", "attractive", "disulfide_bond", "aromatic"
+    ]
+    
+    pattern = r'^(\d+(?:\.\d+)?,){13}\d+(?:\.\d+)?$'
+    if not re.fullmatch(pattern, distances.strip()):
+        raise ArgumentTypeError("Input must contain exactly 14 positive float numbers separated by commas.")
+
+    numbers = [float(x) for x in distances.strip().split(",")]
+    
+    result = {}
+    for idx, key in enumerate(keys):
+        min_val = numbers[2 * idx]
+        max_val = numbers[2 * idx + 1]
+        if min_val >= max_val:
+            raise ArgumentTypeError(
+                f"For the '{key}' type, the second value must be greater than the first (got {min_val} and {max_val})."
+            )
+        result[key] = [min_val, max_val]
+
+    return result

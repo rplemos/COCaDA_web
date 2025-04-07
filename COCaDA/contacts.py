@@ -31,6 +31,7 @@ def contact_detection(protein, region, interface, custom_distances, epsilon):
     max_ca_distance = 20.47 # 0.01 higher than the Arg-Arg pair
     
     categories = custom_distances if custom_distances else conditions.categories
+
     if epsilon > 0:
         max_ca_distance += epsilon
         updated_distances = {key: value + epsilon for key, value in distances.items()}
@@ -133,12 +134,13 @@ def show_contacts(contacts):
     output = []
     
     output.append("Chain1,Res1,ResName1,Atom1,Chain2,Res2,ResName2,Atom2,Distance,Type")
-    for entry in contacts:
-        output.append(entry.print_text())
+    for contact in contacts:
+        output.append(contact.print_text())
         
     return "\n".join(output) # returns as a string to be written directly into the file
 
 
+# COCaDA-web exclusive
 def count_contacts(contacts):
     """
     Formats and returns the number of contacts for each type. Only works with the -o flag.
