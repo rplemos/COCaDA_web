@@ -6,10 +6,9 @@ License: MIT License
 """
 
 import os
-import json
 from timeit import default_timer as timer
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from psutil import Process
+#from psutil import Process
 from itertools import islice
 
 import parser
@@ -176,7 +175,7 @@ def process_result(result, output):
         print(output_data)
         
         if output:
-            output_folder = f"{output}/{protein.id}/"
+            output_folder = f"{output}"
             
             # COCaDA-web exclusive
             number_contacts = contacts.count_contacts(contacts_list)
@@ -185,14 +184,11 @@ def process_result(result, output):
             if not os.path.exists(output_folder):
                 os.makedirs(output_folder)
             
-            with open(f"{output_folder}/{protein.id}_contacts.csv","w") as f:
+            with open(f"{output_folder}/contacts.csv","w") as f:
                 f.write(contacts.show_contacts(contacts_list))
             
-            with open(f"{output_folder}/{protein.id}_info.csv","w") as f:
+            with open(f"{output_folder}/info.csv","w") as f:
                 f.write(f"{protein.id},{protein.title},{protein.true_count()},{len(contacts_list)},{number_contacts}")
-
-            with open(f"{output}/list.csv","a") as f:
-                f.write(f"{protein.id},{protein.title},{protein.true_count()},{len(contacts_list)}\n")
 
 
 if __name__ == "__main__":
