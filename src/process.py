@@ -131,16 +131,16 @@ def process_file(file_path, context):
             return None
 
         if context.ph is None:
-            uncertaintity_flags, local_contact_types = contacts.change_protonation(ph, context.silent)
+            uncertainty_flags, local_contact_types = contacts.change_protonation(ph, context.silent)
             if ph != 7.4:
                 log(f"Found experimental protein pH value at {ph}. You can change this using the -ph flag.", context.silent)
                 log(f"Changing protonation states of pH-sensitive atoms using pH value of {ph}.", context.silent)
             else:
                 log("Defaulting pH value to 7.4.", context.silent)
         else:
-            uncertaintity_flags, local_contact_types = contacts.change_protonation(context.ph, context.silent)
+            uncertainty_flags, local_contact_types = contacts.change_protonation(context.ph, context.silent)
             
-        contacts_list, interface_res, count_contacts, uncertain_results = contacts.contact_detection(parsed_data, context.region, context.interface, context.custom_distances, context.epsilon, uncertaintity_flags, local_contact_types)
+        contacts_list, interface_res, count_contacts, uncertain_results = contacts.contact_detection(parsed_data, context.region, context.interface, context.custom_distances, context.epsilon, uncertainty_flags, local_contact_types)
         process_time = timer() - start_time
         return parsed_data, contacts_list, process_time, interface_res, count_contacts, uncertain_results, ph
 

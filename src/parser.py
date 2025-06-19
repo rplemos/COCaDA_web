@@ -77,6 +77,7 @@ def parse_pdb(pdb_file):
             elif line.startswith("TITLE"):
                 current_protein.set_title(line[10:])
                 
+            # remark 200 = x-ray; remark 210,215,217 = NMR    
             elif line.startswith("REMARK 200") or line.startswith("REMARK 21"):
                 match = ph_pattern.search(line)
                 if match:

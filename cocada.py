@@ -8,7 +8,6 @@ License: MIT License
 import os
 import json
 from timeit import default_timer as timer
-from copy import copy
 
 import src.argparser as argparser
 import src.classes as classes
