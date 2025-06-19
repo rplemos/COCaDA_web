@@ -193,16 +193,7 @@ def process_result(result, context):
             # with open(f"{output_folder}/{protein.id}_interface.csv", "w") as f:
             #     for res in interface_res:
             #         f.write(f"{res}\n")  # Writes each residue on a new line
-
-
-def validate_categories(categories):
-    for key, (min_val, max_val) in categories.items():
-        if min_val < 0 or max_val < 0:
-            raise ValueError(f"Invalid values for '{key}': values must be positive.")
-        if min_val >= max_val:
-            raise ValueError(f"Invalid range for '{key}': min ({min_val}) must be less than max ({max_val}).")
-    return categories
-
+            
 
 def log(message, silent=False):
     if not silent:
