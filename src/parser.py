@@ -5,11 +5,12 @@ Date: 12/08/2024
 License: MIT License
 """
 
-from classes import Protein, Chain, Residue, Atom
+from src.classes import Protein, Chain, Residue, Atom
 
 import os
 from numpy import mean, array
 from numpy.linalg import svd
+import re
 
 
 stacking = {
@@ -49,6 +50,8 @@ def parse_pdb(pdb_file):
     current_entity = None
     entity_chains = {}
     entity = None
+    ph = 7.4
+    ph_pattern = re.compile(r'\bPH\b\s*[:\s]\s*([-+]?\d*\.\d+|\d+)')
 
     with open(pdb_file) as f:
         
@@ -64,7 +67,7 @@ def parse_pdb(pdb_file):
             elif line.startswith("COMPND"):
                 if "MOL_ID" in line:
                     current_entity = line[-2]
-                elif "CHAIN" in line:
+                elif "CHAIN:" in line:
                     chains = line.split(":")[1].strip().replace(";","").replace(" ","")
                     entity_chains[current_entity] = chains.split(",")
         
@@ -74,10 +77,23 @@ def parse_pdb(pdb_file):
             elif line.startswith("TITLE"):
                 current_protein.set_title(line[10:])
                 
+            elif line.startswith("REMARK 200") or line.startswith("REMARK 21"):
+                match = ph_pattern.search(line)
+                if match:
+                    ph_str = match.group(1)
+                    if '-' in ph_str or '/' in ph_str or 'NULL' in line.upper():
+                        continue
+                    ph = float(ph_str)                
+                
             elif line.startswith("ATOM"):
                 chain_id = line[21]
-                if entity_chains and chain_id in entity_chains[current_entity]:
-                    entity = current_entity
+                
+                if entity_chains:
+                    for key, chains in entity_chains.items():
+                        if chain_id in chains:
+                            entity = key
+                            break
+                        
                 resnum = int(line[22:26])
                 # if resnum <= 0:
                 #     continue
@@ -110,7 +126,10 @@ def parse_pdb(pdb_file):
                     current_residue = Residue(resnum, resname, atoms, current_chain, False, None)
                                                                 
                 atomname = line[12:16].replace(" ", "")
-                if atomname == "OXT" or atomname.startswith("H"): # OXT is the C-terminal Oxygen atom
+                if atomname == "OXT": # OXT is the C-terminal Oxygen atom
+                    current_chain.residues.append(current_residue)
+                    continue
+                elif atomname.startswith("H"):
                     continue
                 
                 x, y, z = float(line[30:38]), float(line[38:46]), float(line[46:54])
@@ -140,15 +159,15 @@ def parse_pdb(pdb_file):
 
                             normal_vector = calc_normal_vector(ring_atoms)
                             current_residue.normal_vector = normal_vector
-                                                        
+                            
             elif line.startswith("END"):  
                 # Handling cases where there is no ID
                 if current_protein.id is None:
                     id = str(pdb_file).split("/")[-1]
                     id = id.split(".")[0]
                     current_protein.id = id  
-                
-    return current_protein
+    
+    return current_protein, ph
 
 
 def parse_cif(cif_file):
@@ -178,6 +197,7 @@ def parse_cif(cif_file):
     models = []
     title = None
     title_block = False
+    ph = 7.4
 
     with open(cif_file) as f:
         
@@ -208,6 +228,12 @@ def parse_cif(cif_file):
                 else:
                     title += line.strip()
                     title_block = False
+                    
+            if line.startswith("_exptl_crystal_grow.pH") or line.startswith("_pdbx_nmr_exptl_sample_conditions.pH"):
+                try:
+                    ph = float(line.split()[1])
+                except ValueError:
+                    pass
 
             if line.startswith("_atom_site.group_PDB"): # entering ATOM definition block
                 atomsite_block = True
@@ -327,7 +353,8 @@ def parse_cif(cif_file):
         current_protein.set_title(title.title().replace("'","").replace('"','').replace(",","."))
     else:
         current_protein.set_title(None)
-    return current_protein
+    
+    return current_protein, ph
 
 
 def centroid(residue, ring_atoms, entity):

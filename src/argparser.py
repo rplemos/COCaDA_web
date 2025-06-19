@@ -34,14 +34,19 @@ def cl_parse():
         parser.add_argument('-m', '--multicore', required=False, nargs='?', const=0, help='Use MultiCore mode. Default uses all available cores, and selections can be defined based on the following: -m X = specific single core. -m X-Y = range of cores from X to Y. -m X,Y,Z... = specific multiple cores.')
         parser.add_argument('-o', '--output', required=False, nargs='?', const='./outputs', help='Outputs the results to files in the given folder. Default is ./outputs.')
         parser.add_argument('-r', '--region', required=False, nargs='?', help='Define only a region of residues to be analyzed. Selections can be defined based on the following: -r X-Y = range of residues from X to Y. -r X,Y,Z... = specific multiple residues.')
-        parser.add_argument('-i', '--interface', required=False, action='store_true', help='Calculate only interface contacts.')
-        parser.add_argument('-d', '--distances', required=False, help='Processes custom contact distances defined by the user. Input is 14 positive float values separated by commas (min-max values for each of the 7 contact types).')
+        parser.add_argument('-i', '--interface', required=False, nargs='?', const='interface.csv', help='Calculate only interface contacts.')        
+        parser.add_argument('-d', '--distances', required=False, action='store_true', help='Processes custom contact distances based on the "contact_distances.txt" file.')
+        parser.add_argument('-ph', '--ph', type=validate_ph, default=None, help='pH value (0-14)')
+        parser.add_argument('-s', '--silent', required=False, action='store_true', help='Suppresses non-essential console output.')
 
         args = parser.parse_args()
 
         files = args.files
         output = args.output
         interface = args.interface
+        distances = args.distances
+        ph = args.ph
+        silent = args.silent
                 
         ncores = cpu_count()
         multi = args.multicore
@@ -58,13 +63,7 @@ def cl_parse():
             region = validate_region(region_values)
         else:
             region = None
-            
-        custom_distances = args.distances
-        if custom_distances is not None:
-            distances = validate_distances(custom_distances)
-        else:
-            distances = None
-            
+        
     except ArgumentError as e:
         print(f"Argument Error: {str(e)}")
         exit(1)
@@ -77,7 +76,7 @@ def cl_parse():
         print(f"An unexpected error occurred: {str(e)}")
         exit(1)
     
-    return files, core, output, region, interface, distances
+    return files, core, output, region, interface, distances, ph, silent
         
         
 def validate_file(value):
@@ -102,6 +101,7 @@ def validate_file(value):
         raise ArgumentTypeError(f"{value} is not a valid file. File must end with '.pdb' or '.cif'")
 
 
+
 def validate_core(value, ncores):
     """
     Validates the --core argument to ensure it follows the correct format.
@@ -117,12 +117,12 @@ def validate_core(value, ncores):
     Raises:
         ArgumentTypeError: If the input is not valid or exceeds available cores.
     """
-    # Check if it's a single core
+    # Check if it's a single number representing the number of cores to use
     if value.isdigit():
-        core = int(value)
-        if core < 0 or core >= ncores:
-            raise ArgumentTypeError(f"Core number {core} exceeds available cores (max: {ncores - 1})")
-        return [core]
+        core_count = int(value)
+        if core_count <= 0 or core_count > ncores:
+            raise ArgumentTypeError(f"Requested number of cores {core_count} exceeds available cores (max: {ncores})")
+        return core_count
     
     # Check if it's a range (e.g. 10-19)
     range_match = re.match(r'^(\d+)-(\d+)$', value)
@@ -177,38 +177,25 @@ def validate_region(region):
     raise ArgumentTypeError(f"Invalid region format: {region}. Use a range (x-y) or a list (x,y,z).")
 
 
-def validate_distances(distances):
+def validate_ph(value):
     """
-    Validates that the custom_distances string contains exactly 14 positive float numbers separated by commas.
-    Groups the numbers into specific pairs and keys in a dictionary.
-    Ensures that for each pair (min, max), the second value is strictly greater than the first.
-    Raises ArgumentTypeError if the format is incorrect or any validation fails.
+    Validates the pH argument from the command line, ensuring that the provided value 
+    is a valid floating-point number within the acceptable range (0.0 to 14.0).
 
-    Args:
-        value (str): The custom_distances string to validate.
+    Parameters:
+        value (str): The pH value as a string (from command-line input).
 
     Returns:
-        dict[str, list[float]]: The conditions dictionary for contact detection.
+        float: The validated pH value as a float.
+
+    Raises:
+        ArgumentTypeError: If the input is not a number or is outside the 0–14 range.
     """
     
-    keys = [
-        "salt_bridge", "hydrophobic", "hydrogen_bond", "repulsive", "attractive", "disulfide_bond", "aromatic"
-    ]
-    
-    pattern = r'^(\d+(?:\.\d+)?,){13}\d+(?:\.\d+)?$'
-    if not re.fullmatch(pattern, distances.strip()):
-        raise ArgumentTypeError("Input must contain exactly 14 positive float numbers separated by commas.")
-
-    numbers = [float(x) for x in distances.strip().split(",")]
-    
-    result = {}
-    for idx, key in enumerate(keys):
-        min_val = numbers[2 * idx]
-        max_val = numbers[2 * idx + 1]
-        if min_val >= max_val:
-            raise ArgumentTypeError(
-                f"For the '{key}' type, the second value must be greater than the first (got {min_val} and {max_val})."
-            )
-        result[key] = [min_val, max_val]
-
-    return result
+    try:
+        ph = float(value)
+    except ValueError:
+        raise ArgumentTypeError(f"Invalid pH value: '{value}' is not a number.")
+    if not (0.0 <= ph <= 14.0):
+        raise ArgumentTypeError(f"Invalid pH: Must be between 0 and 14 (got {ph}).")
+    return ph

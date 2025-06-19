@@ -16,13 +16,16 @@ class ProcessingContext:
         interface (bool): Whether to process interface-related data. Defaults to False.
     """
 
-    def __init__(self, core=None, output=None, region=False, interface=False, custom_distances=False, epsilon=0):
+    def __init__(self, core=None, output=None, region=False, interface=False, custom_distances=False, epsilon=0, ph=7.4, silent=False, uncertainty_flags=None):
         self.core = core
         self.output = output
         self.region = region
         self.interface = interface
         self.custom_distances = custom_distances
         self.epsilon = epsilon
+        self.ph = ph
+        self.silent = silent
+        self.uncertainty_flags = uncertainty_flags
 
 class Protein:
     """
