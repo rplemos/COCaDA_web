@@ -168,16 +168,16 @@ def process_result(result, context):
         log(f"{count}\n", silent)
         
         if output:
-            output_folder = f"{output}/"
+            output_folder = f"{output}"
             
             if not os.path.exists(output_folder):
                 os.makedirs(output_folder)
             
-            with open(f"{output_folder}/{protein.id}_contacts.csv","w") as f:
+            with open(f"{output_folder}/contacts.csv","w") as f:
                 f.write(contacts.show_contacts(contacts_list))
             
             if uncertain_contacts:    
-                with open(f"{output_folder}/{protein.id}_uncertain_contacts.csv","w") as f:
+                with open(f"{output_folder}/uncertain_contacts.csv","w") as f:
                     f.write(f"The side-chain pKa value of at least one residue is within +-1.0 of used pH value ({ph}).\n")
                     f.write("Chain1,Res1,ResName1,Atom1,Chain2,Res2,ResName2,Atom2,Distance,Type\n")
                     for line in uncertain_contacts:
@@ -186,7 +186,7 @@ def process_result(result, context):
             # COCaDA-web exclusive
             number_contacts = contacts.count_contacts(contacts_list)
             number_contacts = ','.join(map(str, number_contacts))
-            with open(f"{output_folder}/{protein.id}_info.csv","w") as f:
+            with open(f"{output_folder}/info.csv","w") as f:
                 f.write(f"{protein.id},{protein.title},{protein.true_count()},{len(contacts_list)},{number_contacts}")
             
             ### Created for COCaDA_speed ###
