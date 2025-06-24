@@ -198,7 +198,10 @@ def parse_cif(cif_file):
     models = []
     title = None
     title_block = False
+    
     ph = 7.4
+    experimental_lines = []
+    nmr_expt = False
 
     with open(cif_file) as f:
         
@@ -230,11 +233,28 @@ def parse_cif(cif_file):
                     title += line.strip()
                     title_block = False
                     
-            if line.startswith("_exptl_crystal_grow.pH") or line.startswith("_pdbx_nmr_exptl_sample_conditions.pH"):
+            # Direct pH tags      
+            if line.startswith("_exptl_crystal_grow.pH ") or line.startswith("_pdbx_nmr_exptl_sample_conditions.pH "):
+                parts = line.split()
+                if len(parts) > 1:
+                    try:
+                        ph = float(parts[1])
+                    except ValueError:
+                        continue
+                    
+            # Handling files where pH value is not directly after the line
+            elif line.startswith("_pdbx_nmr_exptl_sample_conditions"):
+                field = line.split(".")[1]
+                experimental_lines.append(field)
+                nmr_expt = True             
+            elif nmr_expt and line.startswith("1"):
+                parts = line.split()
                 try:
-                    ph = float(line.split()[1])
-                except ValueError:
+                    nmr_ph_index = experimental_lines.index("pH")
+                    ph = float(parts[nmr_ph_index])
+                except (ValueError, IndexError):
                     pass
+                nmr_expt = False
 
             if line.startswith("_atom_site.group_PDB"): # entering ATOM definition block
                 atomsite_block = True
