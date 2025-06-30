@@ -23,20 +23,26 @@ def main():
     """
     global_time_start = timer()
     
-    file_list, core, output, region, interface, custom_distances, ph, silent = argparser.cl_parse()
+    file_list, core, output, region, chains, interface, custom_distances, ph, silent = argparser.cl_parse()
     
     process.log("\n--------------COCaDA----------------\n", silent)
     
     # context object for shared parameters
-    context = classes.ProcessingContext(core=core, output=output, region=region, interface=interface, custom_distances=custom_distances, ph=ph, silent=silent)
-    
+    context = classes.ProcessingContext(core=core, output=output, region=region, chains=chains, interface=interface, custom_distances=custom_distances, ph=ph, silent=silent)
+
     if core is not None:  # Set specific core affinity
         process.log("Multicore mode selected.", silent)
     else:
         process.log("Running on single mode with no specific core.", silent)
 
     if interface:
-        process.log("Calculating only interface contacts.", silent) 
+        process.log("Calculating only interface contacts.", silent)
+        
+    if region:
+        process.log(f"Calculating contacts in the region: {region}", silent)
+    
+    if chains:
+        process.log(f"Calculating contacts in the chains: {chains}", silent) 
                
     if output:
         process.log(f"Generating outputs in '{output}' folder.", silent)

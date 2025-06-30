@@ -15,7 +15,7 @@ from src.distances import distances
 import src.conditions as conditions
 
 
-def contact_detection(protein, region, interface, custom_distances, epsilon, uncertainty_flags, local_contact_types):
+def contact_detection(protein, region, chains, interface, custom_distances, epsilon, uncertainty_flags, local_contact_types):
     """
     Detects contacts between atoms in a given protein.
 
@@ -61,6 +61,9 @@ def contact_detection(protein, region, interface, custom_distances, epsilon, unc
                 continue
             
             if region and (residue1.resnum not in region or residue2.resnum not in region):
+                continue
+            
+            if chains and (residue1.chain.id not in chains or residue2.chain.id not in chains):
                 continue
 
             if len(residue1.atoms) > 1 and len(residue2.atoms) > 1:
