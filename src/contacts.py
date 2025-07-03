@@ -32,6 +32,8 @@ def contact_detection(protein, region, chains, interface, custom_distances, epsi
     uncertain_contacts = []
     max_ca_distance = 20.47 # 0.01 higher than the Arg-Arg pair
     
+    prev_contact = None
+    
     count_contacts = {
         "hydrogen_bond":["HB",0],
         "hydrophobic":["HY",0],
@@ -147,8 +149,27 @@ def contact_detection(protein, region, chains, interface, custom_distances, epsi
                                         contact = Contact(protein.id, residue1.chain.id, residue1.resnum, residue1.resname, atom1.atomname, 
                                                         protein.id, residue2.chain.id, residue2.resnum, residue2.resname, atom2.atomname, 
                                                         float(f"{distance:.2f}"), contact_type, atom1, atom2)
+                                        
+                                        if prev_contact and contact.type in ['attractive', 'repulsive', 'salt_bridge']:
+                                            info_current = (
+                                                contact.type, 
+                                                residue1.resnum, residue2.resnum, 
+                                                residue1.chain.id, residue2.chain.id, 
+                                                residue1.resname, residue2.resname)
+                                            info_prev = (
+                                                prev_contact.type, 
+                                                prev_contact.residue_num1, prev_contact.residue_num2, 
+                                                prev_contact.chain1, prev_contact.chain2, 
+                                                prev_contact.residue_name1, prev_contact.residue_name2)
+                                            if info_current == info_prev:
+                                                # print(contact.type, residue1.resnum, residue2.resnum, residue1.chain.id, residue2.chain.id, residue1.resname, residue2.resname)
+                                                # print(prev_contact.type, prev_contact.residue_num1, prev_contact.residue_num2, prev_contact.chain1, prev_contact.chain2, prev_contact.residue_name1, prev_contact.residue_name2)
+                                                # print()
+                                                continue
 
                                         contacts.append(contact)
+                                        prev_contact = contact
+                                        
                                         if (name1 in uncertainty_flags or name2 in uncertainty_flags) and contact_type in ['attractive','repulsive','salt_bridge']:
                                             uncertain_contacts.append(contact)
                                             
@@ -281,7 +302,7 @@ def change_protonation(ph, silent):
                     new_neg = 0
                         
             if (original_pos != new_pos) or (original_neg != new_neg):
-                #log(f"pH {ph:.2f} - {key}: (+{original_pos}, -{original_neg}) → (+{new_pos}, -{new_neg}) - pka: {pka_table[resname]}", silent)
+                log(f"pH {ph:.2f} - {key}: (+{original_pos}, -{original_neg}) → (+{new_pos}, -{new_neg}) - pka: {pka_table[resname]}", silent)
                 value[2] = new_pos
                 value[3] = new_neg
 
