@@ -286,7 +286,7 @@ def parse_cif(cif_file):
                 atomsite_block = False
                 atominfo_block = True
                 
-            elif line.startswith("ATOM") and atominfo_block: # entering ATOM information block
+            if line.startswith("ATOM") and atominfo_block: # entering ATOM information block
                 line = line.split()
                 
                 element = line[atom_element_index]

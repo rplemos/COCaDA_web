@@ -145,14 +145,10 @@ def contact_detection(protein, region, chains, interface, custom_distances, epsi
                                     props2 = get_props(name2)
                                 
                                     if conditions.contact_conditions[contact_type](props1, props2): # fits the type of contact
-                                                                                                
-                                        contact = Contact(protein.id, residue1.chain.id, residue1.resnum, residue1.resname, atom1.atomname, 
-                                                        protein.id, residue2.chain.id, residue2.resnum, residue2.resname, atom2.atomname, 
-                                                        float(f"{distance:.2f}"), contact_type, atom1, atom2)
-                                        
-                                        if prev_contact and contact.type in ['attractive', 'repulsive', 'salt_bridge']:
+                                                                                            
+                                        if prev_contact and contact_type in ['attractive', 'repulsive', 'salt_bridge']:
                                             info_current = (
-                                                contact.type, 
+                                                contact_type, 
                                                 residue1.resnum, residue2.resnum, 
                                                 residue1.chain.id, residue2.chain.id, 
                                                 residue1.resname, residue2.resname)
@@ -166,7 +162,11 @@ def contact_detection(protein, region, chains, interface, custom_distances, epsi
                                                 # print(prev_contact.type, prev_contact.residue_num1, prev_contact.residue_num2, prev_contact.chain1, prev_contact.chain2, prev_contact.residue_name1, prev_contact.residue_name2)
                                                 # print()
                                                 continue
-
+                                            
+                                        contact = Contact(protein.id, residue1.chain.id, residue1.resnum, residue1.resname, atom1.atomname, 
+                                                        protein.id, residue2.chain.id, residue2.resnum, residue2.resname, atom2.atomname, 
+                                                        float(f"{distance:.2f}"), contact_type, atom1, atom2)
+                                        
                                         contacts.append(contact)
                                         prev_contact = contact
                                         
@@ -302,7 +302,7 @@ def change_protonation(ph, silent):
                     new_neg = 0
                         
             if (original_pos != new_pos) or (original_neg != new_neg):
-                log(f"pH {ph:.2f} - {key}: (+{original_pos}, -{original_neg}) → (+{new_pos}, -{new_neg}) - pka: {pka_table[resname]}", silent)
+                #log(f"pH {ph:.2f} - {key}: (+{original_pos}, -{original_neg}) → (+{new_pos}, -{new_neg}) - pka: {pka_table[resname]}", silent)
                 value[2] = new_pos
                 value[3] = new_neg
 
