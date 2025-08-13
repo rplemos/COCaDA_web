@@ -190,7 +190,7 @@ class Contact:
     
     def __init__(self, id1, chain1, residue_num1, residue_name1, atom1, 
                  id2, chain2, residue_num2, residue_name2, atom2, 
-                 distance, type, atom_object1, atom_object2):
+                 distance, type, atom_object1, atom_object2, is_uncertain=False):
         """
         Initializes a new Contact instance.
         """
@@ -209,6 +209,7 @@ class Contact:
         self.type = type
         self.atom_object1 = atom_object1
         self.atom_object2 = atom_object2
+        self.is_uncertain = is_uncertain
     
     def print_text(self):
         """
@@ -227,7 +228,10 @@ class Contact:
             "disulfide_bond":"DS",
             "stacking-other":"AS",
             "stacking-parallel":"AS", # on v.1 all aromatic stackings will be considered the same
-            "stacking-perpendicular":"AS" # need to reimplement later
+            "stacking-perpendicular":"AS", # need to reimplement later
+            "uncertain_attractive": "uAT",
+            "uncertain_repulsive": "uRE",
+            "uncertain_salt_bridge": "uSB"
         }
         
         all_values = list(self.__dict__.values())

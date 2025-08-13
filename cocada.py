@@ -11,7 +11,6 @@ from timeit import default_timer as timer
 import src.argparser as argparser
 import src.classes as classes
 import src.process as process
-from src.contacts import change_protonation
 
 def main():
     """
@@ -53,15 +52,13 @@ def main():
         
     if ph:
         process.log(f"Changing protonation states of pH-sensitive atoms using pH value of {ph}.\n", silent)
-        uncertaintity_flags = change_protonation(context.ph, context.silent)
-        context.uncertainty_flags = uncertaintity_flags
         
     if custom_distances:
         process.log("Using custom distances provided by the user.", silent)
         max_value = max(y for x in custom_distances.values() for y in x)
         if max_value > 6:
             context.epsilon = max_value - 6
-            
+
     process.log("\n", silent)
     process_func = process.single if core is None else process.multi_batch
     process_func(file_list, context)

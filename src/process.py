@@ -142,6 +142,7 @@ def process_file(file_path, context):
             
         contacts_list, interface_res, count_contacts, uncertain_results = contacts.contact_detection(parsed_data, context.region, context.chains, context.interface, context.custom_distances, context.epsilon, uncertainty_flags, local_contact_types)
         process_time = timer() - start_time
+        
         return parsed_data, contacts_list, process_time, interface_res, count_contacts, uncertain_results, ph
 
     except Exception as e:
