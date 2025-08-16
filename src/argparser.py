@@ -42,6 +42,7 @@ def cl_parse():
         parser.add_argument('-s', '--silent', required=False, action='store_true', help='Suppresses non-essential console output.')
         parser.add_argument('-c', '--chains', required=False, nargs='?', help='Define only specific chains to be analyzed. -c A = only one chain. -c A,B,C... = specific multiple chains.')
         parser.add_argument('-inter', '--interchain', required=False, action='store_true', help='Calculates only interchain contacts.')
+        parser.add_argument('-w', '--web', required=False, action='store_true', help='Sets outputs to web format. Requires the use of -o flag.')
 
         args = parser.parse_args()
 
@@ -51,6 +52,7 @@ def cl_parse():
         ph = args.ph
         silent = args.silent
         interchain = args.interchain
+        web = args.web
                 
         ncores = cpu_count()
         multi = args.multicore
@@ -96,7 +98,7 @@ def cl_parse():
         print(f"An unexpected error occurred: {str(e)}")
         exit(1)
     
-    return files, core, output, region, chains, interface, distances, ph, silent, interchain
+    return files, core, output, region, chains, interface, distances, ph, silent, interchain, web
         
         
 def validate_file(value):

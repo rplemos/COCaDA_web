@@ -22,12 +22,12 @@ def main():
     """
     global_time_start = timer()
     
-    file_list, core, output, region, chains, interface, custom_distances, ph, silent, interchain = argparser.cl_parse()
+    file_list, core, output, region, chains, interface, custom_distances, ph, silent, interchain, web = argparser.cl_parse()
     
     process.log("\n--------------COCaDA----------------\n", silent)
     
     # context object for shared parameters
-    context = classes.ProcessingContext(core=core, output=output, region=region, chains=chains, interface=interface, custom_distances=custom_distances, ph=ph, silent=silent, interchain=interchain)
+    context = classes.ProcessingContext(core=core, output=output, region=region, chains=chains, interface=interface, custom_distances=custom_distances, ph=ph, silent=silent, interchain=interchain, web=web)
 
     if core is not None:  # Set specific core affinity
         process.log("Multicore mode selected.", silent)
