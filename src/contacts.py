@@ -34,7 +34,6 @@ def contact_detection(protein, context, uncertainty_flags, local_contact_types):
     residues = list(protein.get_residues())
     contacts = []
     interface_res = []
-    uncertain_contacts = []
     max_ca_distance = 20.47 # 0.01 higher than the Arg-Arg pair
 
     contacts_by_pair = defaultdict(list) # empty list under the key if it doesn't exist
@@ -193,8 +192,8 @@ def contact_detection(protein, context, uncertainty_flags, local_contact_types):
                                     })
     
     contacts, count_types = create_contacts(contacts_by_pair)
-
-    return contacts, interface_res, count_types, uncertain_contacts
+    
+    return contacts, interface_res, count_types
 
 
 def show_contacts(contacts):

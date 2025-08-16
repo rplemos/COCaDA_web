@@ -140,10 +140,10 @@ def process_file(file_path, context):
         else:
             uncertainty_flags, local_contact_types = contacts.change_protonation(context.ph, context.silent)
             
-        contacts_list, interface_res, count_types, uncertain_results = contacts.contact_detection(parsed_data, context, uncertainty_flags, local_contact_types)
+        contacts_list, interface_res, count_types = contacts.contact_detection(parsed_data, context, uncertainty_flags, local_contact_types)
         process_time = timer() - start_time
 
-        return parsed_data, contacts_list, process_time, interface_res, count_types, uncertain_results, ph
+        return parsed_data, contacts_list, process_time, interface_res, count_types, ph
 
     except Exception as e:
         log(f"Error processing {file_path}: {e}")
@@ -159,7 +159,7 @@ def process_result(result, context):
         output (str): The directory where output files will be saved.
     """
     if result:
-        protein, contacts_list, process_time, interface_res, count_types, uncertain_contacts, ph = result
+        protein, contacts_list, process_time, interface_res, count_types, ph = result
         output, silent = context.output, context.silent
         ph = ph if context.ph is None else context.ph
         
@@ -176,16 +176,6 @@ def process_result(result, context):
             
             with open(f"{output_folder}/contacts.csv","w") as f:
                 f.write(contacts.show_contacts(contacts_list))
-            
-            ## Testing adding uncertain contacts directly into the output
-            ## Uncomment to do separately
-            #
-            # if uncertain_contacts:    
-            #     with open(f"{output_folder}/uncertain_contacts.csv","w") as f:
-            #         f.write(f"The side-chain pKa value of at least one residue is within +-1.0 of used pH value ({ph}).\n")
-            #         f.write("Chain1,Res1,ResName1,Atom1,Chain2,Res2,ResName2,Atom2,Distance,Type\n")
-            #         for line in uncertain_contacts:
-            #             f.write(f"{line.print_text()}\n")
                     
             # COCaDA-web exclusive
             number_contacts = contacts.count_contacts(contacts_list)
