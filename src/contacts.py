@@ -16,7 +16,7 @@ from src.distances import distances
 import src.conditions as conditions
 
 
-def contact_detection(protein, region, chains, interface, custom_distances, epsilon, uncertainty_flags, local_contact_types):
+def contact_detection(protein, context, uncertainty_flags, local_contact_types):
     """
     Detects contacts between atoms in a given protein.
 
@@ -26,6 +26,10 @@ def contact_detection(protein, region, chains, interface, custom_distances, epsi
     Returns:
         list: A list of Contact objects representing the detected contacts.
     """
+        
+    region, chains, interface, interchain, custom_distances, epsilon = (
+        context.region, context.chains, context.interface, context.interchain, context.custom_distances, context.epsilon
+    )
 
     residues = list(protein.get_residues())
     contacts = []
@@ -50,14 +54,14 @@ def contact_detection(protein, region, chains, interface, custom_distances, epsi
         
     for i, residue1 in enumerate(residues[1:]):
         for _, residue2 in enumerate(residues[i+1:], start=i+1):
+            chain1, chain2 = residue1.chain.id, residue2.chain.id
             
-            if residue1.resnum == residue2.resnum and residue1.chain.id == residue2.chain.id: # ignores same residue
-                continue
-            
-            if region and (residue1.resnum not in region or residue2.resnum not in region):
-                continue
-
-            if chains and (residue1.chain.id not in chains or residue2.chain.id not in chains):
+            if (
+                (residue1.resnum == residue2.resnum and chain1 == chain2)  # same residue
+                or (region and (residue1.resnum not in region or residue2.resnum not in region))  # outside region
+                or (chains and (chain1 not in chains or chain2 not in chains))  # chains not allowed
+                or (interchain and chain1 == chain2)  # interchain required but same chain
+            ):
                 continue
 
             if len(residue1.atoms) > 1 and len(residue2.atoms) > 1:
@@ -76,11 +80,12 @@ def contact_detection(protein, region, chains, interface, custom_distances, epsi
             else:
                 continue
 
-            pair_key = (residue1.chain.id, residue1.resnum, residue2.chain.id, residue2.resnum)
+            pair_key = (chain1, residue1.resnum, chain2, residue2.resnum)
 
             # CHECKING FOR AROMATIC STACKINGS
             if residue1.ring and residue2.ring:
                 ring1, ring2 = residue1.atoms[-1], residue2.atoms[-1] # RNG atoms
+
                 if interface and ring1.entity == ring2.entity:
                     continue
                 
@@ -98,11 +103,11 @@ def contact_detection(protein, region, chains, interface, custom_distances, epsi
 
                     contacts_by_pair[pair_key].append({
                         'protein_id': protein.id,
-                        'chain1': residue1.chain.id,
+                        'chain1': chain1,
                         'resnum1': residue1.resnum,
                         'resname1': residue1.resname,
                         'atomname1': ring1.atomname,
-                        'chain2': residue2.chain.id,
+                        'chain2': chain2,
                         'resnum2': residue2.resnum,
                         'resname2': residue2.resname,
                         'atomname2': ring2.atomname,
@@ -116,7 +121,7 @@ def contact_detection(protein, region, chains, interface, custom_distances, epsi
                 for atom2 in residue2.atoms:
                     
                     if interface:
-                        residue_interface_key = f"{residue1.chain.id},{residue1.resnum},{residue1.resname}"
+                        residue_interface_key = f"{chain1},{residue1.resnum},{residue1.resname}"
                         if (atom1.entity == atom2.entity) or (residue_interface_key not in interface_res):
                             continue
                     
@@ -172,11 +177,11 @@ def contact_detection(protein, region, chains, interface, custom_distances, epsi
                                     
                                     contacts_by_pair[pair_key].append({
                                         'protein_id': protein.id,
-                                        'chain1': residue1.chain.id,
+                                        'chain1': chain1,
                                         'resnum1': residue1.resnum,
                                         'resname1': residue1.resname,
                                         'atomname1': atom1.atomname,
-                                        'chain2': residue2.chain.id,
+                                        'chain2': chain2,
                                         'resnum2': residue2.resnum,
                                         'resname2': residue2.resname,
                                         'atomname2': atom2.atomname,
@@ -188,7 +193,7 @@ def contact_detection(protein, region, chains, interface, custom_distances, epsi
                                     })
     
     contacts, count_types = create_contacts(contacts_by_pair)
-                                            
+
     return contacts, interface_res, count_types, uncertain_contacts
 
 
@@ -210,6 +215,31 @@ def show_contacts(contacts):
         output.append(contact.print_text())
         
     return "\n".join(output) # returns as a string to be written directly into the file
+
+
+# COCaDA-web exclusive
+def count_contacts(contacts):
+    """
+    Formats and returns the number of contacts for each type. Only works with the -o flag.
+
+    Args:
+        contacts (list): A list of Contact objects of a given protein.
+
+    Returns:
+        list: A list of the number of contacts for each type.
+    """
+    
+    category_counts = {}
+    for contact in contacts:
+        category = contact.type
+        if category in ['stacking-other', 'stacking-parallel', 'stacking-perpendicular']:
+            category = 'aromatic'
+        category_counts[category] = category_counts.get(category, 0) + 1
+        
+    expected_keys = ['hydrogen_bond', 'hydrophobic', 'attractive', 'repulsive', 'salt_bridge', 'disulfide_bond', 'aromatic', "uncertain_attractive", "uncertain_repulsive", "uncertain_salt_bridge"]
+    values = [category_counts.get(key, 0) for key in expected_keys]
+
+    return values
 
 
 def calc_angle(vector1, vector2):

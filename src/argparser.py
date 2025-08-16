@@ -10,6 +10,7 @@ from argparse import ArgumentParser, ArgumentError, ArgumentTypeError
 from multiprocessing import cpu_count
 import re
 import json
+import os
 
 
 def cl_parse():
@@ -35,20 +36,21 @@ def cl_parse():
         parser.add_argument('-m', '--multicore', required=False, nargs='?', const=0, help='Use MultiCore mode. Default uses all available cores, and selections can be defined based on the following: -m X = specific single core. -m X-Y = range of cores from X to Y. -m X,Y,Z... = specific multiple cores.')
         parser.add_argument('-o', '--output', required=False, nargs='?', const='./outputs', help='Outputs the results to files in the given folder. Default is ./outputs.')
         parser.add_argument('-r', '--region', required=False, nargs='?', help='Define only a region of residues to be analyzed. Selections can be defined based on the following: -r X-Y = range of residues from X to Y. -r X,Y,Z... = specific multiple residues.')
-        parser.add_argument('-i', '--interface', required=False, nargs='?', const='interface.csv', help='Calculate only interface contacts.')        
+        parser.add_argument('-i', '--interface', required=False, nargs='?', const='interface.csv', help='Calculate only interface contacts. An "interface.csv" file is needed.')        
         parser.add_argument('-d', '--distances', nargs='?', type=validate_distances, default=False, help='Processes custom contact distances based on the "contact_distances.txt" file.')
         parser.add_argument('-ph', '--ph', type=validate_ph, default=None, help='pH value (0-14)')
         parser.add_argument('-s', '--silent', required=False, action='store_true', help='Suppresses non-essential console output.')
         parser.add_argument('-c', '--chains', required=False, nargs='?', help='Define only specific chains to be analyzed. -c A = only one chain. -c A,B,C... = specific multiple chains.')
+        parser.add_argument('-inter', '--interchain', required=False, action='store_true', help='Calculates only interchain contacts.')
 
         args = parser.parse_args()
 
         files = args.files
         output = args.output
-        interface = args.interface
         distances = args.distances
         ph = args.ph
         silent = args.silent
+        interchain = args.interchain
                 
         ncores = cpu_count()
         multi = args.multicore
@@ -71,6 +73,16 @@ def cl_parse():
             chains = validate_chains(chain_values)
         else:
             chains = None
+            
+        interface = args.interface
+        if interface is not None:
+            try: 
+                validate_interface(interface)
+            except FileNotFoundError as e:
+                print(e)
+                exit(1)
+        else:
+            interface = None
 
     except ArgumentError as e:
         print(f"Argument Error: {str(e)}")
@@ -84,7 +96,7 @@ def cl_parse():
         print(f"An unexpected error occurred: {str(e)}")
         exit(1)
     
-    return files, core, output, region, chains, interface, distances, ph, silent
+    return files, core, output, region, chains, interface, distances, ph, silent, interchain
         
         
 def validate_file(value):
@@ -271,3 +283,8 @@ def validate_distances(value):
         raise ArgumentTypeError("Invalid!")
 
     return validated_distances
+
+
+def validate_interface(interface):
+    if not os.path.exists(interface):
+        raise FileNotFoundError(f"File '{interface}' does not exist!")
