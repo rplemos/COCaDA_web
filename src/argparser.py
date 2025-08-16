@@ -33,14 +33,14 @@ def cl_parse():
     try:
         parser = ArgumentParser(description='COCαDA - Large-Scale Protein Interatomic Contact Cutoff Optimization by Cα Distance Matrices.')
         parser.add_argument('-f', '--files', nargs='+', required=True, type=validate_file, help='List of files in pdb/cif format (at least one required). Wildcards are accepted (ex. -f *.cif).')
-        parser.add_argument('-m', '--multicore', required=False, nargs='?', const=0, help='Use MultiCore mode. Default uses all available cores, and selections can be defined based on the following: -m X = specific single core. -m X-Y = range of cores from X to Y. -m X,Y,Z... = specific multiple cores.')
+        parser.add_argument('-m', '--cores', required=False, nargs='?', const=0, help='Use MultiCore mode. Default uses all available cores, and selections can be defined based on the following: -m X = specific single core. -m X-Y = range of cores from X to Y. -m X,Y,Z... = specific multiple cores.')
         parser.add_argument('-o', '--output', required=False, nargs='?', const='./outputs', help='Outputs the results to files in the given folder. Default is ./outputs.')
         parser.add_argument('-r', '--region', required=False, nargs='?', help='Define only a region of residues to be analyzed. Selections can be defined based on the following: -r X-Y = range of residues from X to Y. -r X,Y,Z... = specific multiple residues.')
         parser.add_argument('-i', '--interface', required=False, nargs='?', const='interface.csv', help='Calculate only interface contacts. An "interface.csv" file is needed.')        
         parser.add_argument('-d', '--distances', nargs='?', type=validate_distances, default=False, help='Processes custom contact distances based on the "contact_distances.txt" file.')
         parser.add_argument('-ph', '--ph', type=validate_ph, default=None, help='pH value (0-14)')
-        parser.add_argument('-s', '--silent', required=False, action='store_true', help='Suppresses non-essential console output.')
         parser.add_argument('-c', '--chains', required=False, nargs='?', help='Define only specific chains to be analyzed. -c A = only one chain. -c A,B,C... = specific multiple chains.')
+        parser.add_argument('-s', '--silent', required=False, action='store_true', help='Suppresses non-essential console output.')
         parser.add_argument('-inter', '--interchain', required=False, action='store_true', help='Calculates only interchain contacts.')
         parser.add_argument('-w', '--web', required=False, action='store_true', help='Sets outputs to web format. Requires the use of -o flag.')
 
