@@ -55,7 +55,7 @@ def cl_parse():
         web = args.web
                 
         ncores = cpu_count()
-        multi = args.multicore
+        multi = args.cores
         if multi is not None:
             if multi == 0:
                 core = list(range(ncores))
