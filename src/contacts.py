@@ -294,10 +294,13 @@ def change_protonation(ph, silent):
             
             original_pos = value[2]
             original_neg = value[3]
+            original_donor = value[4]
+            original_acceptor = value[5]
             
-            new_pos, new_neg = original_pos, original_neg  # Default: no change            
+            new_pos, new_neg = original_pos, original_neg  # Default: no change
+            new_donor, new_acceptor = original_donor, original_acceptor
             
-            if resname in ['D', 'E', 'C', 'Y']:  # Acidic
+            if resname in ['D', 'E', 'Y']:  # Acidic
                 if delta < 2.0:
                     new_pos = 0
                     new_neg = 0
@@ -316,11 +319,26 @@ def change_protonation(ph, silent):
                     is_protonated = ph < pka
                     new_pos = 1 if is_protonated else 0
                     new_neg = 0
+            
+            elif resname == 'C': # Cysteine thiol
+                if delta < 2.0:
+                    # uncertain protonation: both donor and acceptor could be possible
+                    new_donor = 1
+                    new_acceptor = 1
+                    uncertainty_flags[key] = {'donor': True, 'acceptor': True}
+                else:
+                    is_deprotonated = ph > pka
+                    new_donor = 0 if is_deprotonated else 1
+                    new_acceptor = 1 if is_deprotonated else 0
                         
             if (original_pos != new_pos) or (original_neg != new_neg):
-                #log(f"pH {ph:.2f} - {key}: (+{original_pos}, -{original_neg}) → (+{new_pos}, -{new_neg}) - pka: {pka_table[resname]}", silent)
+                #log(f"pH {ph:.2f} - {key}: (+{original_pos}, -{original_neg}) → (+{new_pos}, -{new_neg}) - pka: {pka}", silent)
                 value[2] = new_pos
                 value[3] = new_neg
+            if (original_donor != new_donor) or (original_acceptor != new_acceptor):
+                #log(f"pH {ph:.2f} - {key}: (D{original_donor}, A{original_acceptor}) → (D{new_donor}, A{new_acceptor}) - pka: {pka}", silent)
+                value[4] = new_donor
+                value[5] = new_acceptor
 
     #log("\n", silent)
     return uncertainty_flags, local_contact_types
