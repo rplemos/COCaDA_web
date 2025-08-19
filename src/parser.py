@@ -388,10 +388,6 @@ def parse_cif(cif_file):
     else:
         current_protein.set_title(None)
     
-    for residue in current_protein.get_residues():
-        pass
-        print(residue.chain.id, residue.resname, residue.resnum)
-    
     return current_protein, ph
 
 
