@@ -53,7 +53,7 @@ def main():
     else:
         output = None
         
-    if ph:
+    if ph and ph != -1:
         process.log(f"Changing protonation states of pH-sensitive atoms using pH value of {ph}.\n", silent)
         
     if custom_distances:

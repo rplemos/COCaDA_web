@@ -259,7 +259,7 @@ def parse_cif(cif_file):
                 except (ValueError, IndexError):
                     pass
                 nmr_expt = False
-
+                
             if line.startswith("_atom_site.group_PDB"): # entering ATOM definition block
                 atomsite_block = True
                 line = line.split(".")[1]
@@ -387,7 +387,10 @@ def parse_cif(cif_file):
         current_protein.set_title(title.title().replace("'","").replace('"','').replace(",","."))
     else:
         current_protein.set_title(None)
-    
+        
+    if ph == 0 or ph > 14:
+        ph = 7.4
+            
     return current_protein, ph
 
 

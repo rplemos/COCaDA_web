@@ -122,7 +122,7 @@ def process_file(file_path, context):
 
     try:
         parsed_data, ph = parser.parse_pdb(file_path) if file_path.endswith(".pdb") else parser.parse_cif(file_path)
-
+                
         if context.ph is None:
             uncertainty_flags, local_contact_types = contacts.change_protonation(ph, context.silent)
             if ph != 7.4:
@@ -131,6 +131,8 @@ def process_file(file_path, context):
             else:
                 log("Defaulting pH value to 7.4.", context.silent)
         else:
+            if context.ph == -1:
+                context.ph = ph
             uncertainty_flags, local_contact_types = contacts.change_protonation(context.ph, context.silent)
             
         if parsed_data.true_count() > 10000:  # Skip very large proteins (customizable)

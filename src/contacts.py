@@ -87,7 +87,7 @@ def contact_detection(protein, context, uncertainty_flags, local_contact_types):
 
                 if interface and ring1.entity == ring2.entity:
                     continue
-                
+                                
                 distance = dist((ring1.x, ring1.y, ring1.z), (ring2.x, ring2.y, ring2.z))
                 angle = calc_angle(residue1.normal_vector, residue2.normal_vector)
                 
@@ -121,7 +121,9 @@ def contact_detection(protein, context, uncertainty_flags, local_contact_types):
                     
                     if interface:
                         residue_interface_key = f"{chain1},{residue1.resnum},{residue1.resname}"
-                        if (atom1.entity == atom2.entity) or (residue_interface_key not in interface_res):
+                        # if (atom1.entity == atom2.entity) or (residue_interface_key not in interface_res):
+                        #     continue
+                        if (residue_interface_key not in interface_res):
                             continue
                     
                     name1 = f"{atom1.residue.resname}:{atom1.atomname}" # matches the pattern from conditions dictionary

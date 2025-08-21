@@ -232,6 +232,8 @@ def validate_ph(value):
         ph = float(value)
     except ValueError:
         raise ArgumentTypeError(f"Invalid pH value: '{value}' is not a number.")
+    if ph == -1:
+        return ph
     if not (0.0 <= ph <= 14.0):
         raise ArgumentTypeError(f"Invalid pH: Must be between 0 and 14 (got {ph}).")
     return ph
